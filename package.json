@@ -1,0 +1,15 @@
+{
+  "name": "glitzify-backend",
+  "version": "1.0.0",
+  "description": "E-commerce website",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Hamad Gul",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "nodemon": "^3.1.11"
+  }
+}
