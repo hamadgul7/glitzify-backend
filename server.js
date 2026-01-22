@@ -2,6 +2,9 @@ const express = require('express');
 const db = require('./config/db.js');
 const path = require('path');
 
+const productRoutes = require('./routes/admin/product-routes.js');
+
+
 
 
 const cors = require('cors');
@@ -18,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
-
+app.use('/admin', productRoutes);
 
 
 db.connectToDatabase()

@@ -1,17 +1,15 @@
-//mongodb+srv://<db_username>:<db_password>@glitzify-backend.hhmin58.mongodb.net/?appName=glitzify-backend
-
 const mongoose = require('mongoose');
-
+require('dotenv').config();
 async function connectToDatabase() {
   try {
-    await mongoose.connect('mongodb+srv://hamad:Hamad07%40@glitzify-backend.hhmin58.mongodb.net/?appName=glitzify-backend');
-        
+    await mongoose.connect(
+      `mongodb+srv://${encodeURIComponent(process.env.MONGO_USER)}:${encodeURIComponent(process.env.MONGO_PASSWORD)}@${process.env.MONGO_CLUSTER}.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`
+    );
+
     console.log('Connected to the database successfully!');
   } catch (error) {
     console.error('Failed to connect to the database:', error);
   }
-};
+}
 
-
-module.exports = {connectToDatabase: connectToDatabase};
-
+module.exports = { connectToDatabase };

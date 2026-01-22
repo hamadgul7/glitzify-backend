@@ -1,0 +1,75 @@
+const productService = require('../../services/admin/product-services');
+
+
+async function addProduct(req, res) {
+    try {
+        const data = JSON.parse(req.body.data);
+        const files = req.files;
+
+        const newProduct = await productService.createProduct(data, files);
+
+        res.status(201).json({ newProduct, message: "Product added successfully" });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+}
+
+
+async function updateProductById(req, res) {
+    try {
+        const { id } = req.params;
+        const data = JSON.parse(req.body.data);
+        const files = req.files;
+
+        const updatedProduct = await productService.updateProduct(id, data, files);
+        res.status(200).json({ updatedProduct, message: "Product updated successfully" });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+}
+
+async function getProductById(req, res) {
+    try {
+        const { id } = req.params;
+
+        const product = await productService.getProductById(id);
+        res.status(200).json({ product, message: "Product retrieved successfully" });
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+}
+
+async function getAllProducts(req, res) {
+    try {
+        const { pageNo, limit } = req.query;
+        const result = await productService.getAllProducts(pageNo, limit);
+        res.status(200).json({ ...result, message: "Products retrieved successfully" });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+}
+
+async function deleteProductById(req, res) {
+    try {
+        const { id } = req.params;
+
+        await productService.deleteProduct(id);
+
+        res.status(200).json({
+            message: "Product deleted successfully"
+        });
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        });
+    }
+}
+
+
+module.exports = {
+    addProduct,
+    updateProductById,
+    getProductById,
+    getAllProducts,
+    deleteProductById
+};
