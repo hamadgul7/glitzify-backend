@@ -13,7 +13,6 @@ async function createProduct(data, files) {
         throw new Error("At least one image is required");
     }
 
-    // Upload images to Cloudinary
     const imagePaths = await Promise.all(
         files.map(async (file) => {
             const result = await cloudinary.uploader.upload(file.path);
@@ -24,14 +23,12 @@ async function createProduct(data, files) {
     let variants = [];
     let totalQuantity = 0;
 
-    // Case 1: Variants provided
     if (Array.isArray(data.variants) && data.variants.length > 0) {
         variants = data.variants.map((v, index) => {
             if (v.quantity == null) {
                 throw new Error(`Quantity is required for variant at index ${index} (size: ${v.size}, color: ${v.color})`);
             }
 
-            // Ensure at least one of size or color exists
             if (!v.size && !v.color) {
                 throw new Error(`Either size or color is required for variant at index ${index}`);
             }
@@ -46,7 +43,7 @@ async function createProduct(data, files) {
             };
         });
     } 
-    // Case 2: No variants → totalQuantity required
+
     else if (data.totalQuantity != null) {
         totalQuantity = Number(data.totalQuantity);
     } 
@@ -71,7 +68,6 @@ async function createProduct(data, files) {
     const product = new Product(productData);
     return await product.save();
 }
-
 
 
 async function getProductById(productId) {
