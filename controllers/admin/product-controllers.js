@@ -23,11 +23,16 @@ async function updateProductById(req, res) {
         const files = req.files;
 
         const updatedProduct = await productService.updateProduct(id, data, files);
-        res.status(200).json({ updatedProduct, message: "Product updated successfully" });
+
+        res.status(200).json({
+            updatedProduct,
+            message: "Product updated successfully"
+        });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 }
+
 
 async function getProductById(req, res) {
     try {

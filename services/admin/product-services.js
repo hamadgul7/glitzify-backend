@@ -114,19 +114,49 @@ async function updateProduct(id, data, files) {
     const product = await Product.findById(id);
     if (!product) throw new Error("Product not found");
 
+    let imagePaths = product.imagePath;
 
-    let filePaths = [];
     if (files && files.length > 0) {
-        const uploadedImages = await Promise.all(files.map(f => cloudinary.uploader.upload(f.path)));
-        filePaths = uploadedImages.map(img => img.secure_url);
+        const uploadedImages = await Promise.all(
+            files.map(file => cloudinary.uploader.upload(file.path))
+        );
+        imagePaths = uploadedImages.map(img => img.secure_url);
     }
 
-    if (filePaths.length === 0) {
-        filePaths = product.imagePath;
+    let variants = [];
+    let totalQuantity = 0;
+
+
+    if (Array.isArray(data.variants) && data.variants.length > 0) {
+        variants = data.variants.map((v, index) => {
+            if (v.quantity == null) {
+                throw new Error(`Quantity is required for variant at index ${index}`);
+            }
+
+            if (!v.size && !v.color) {
+                throw new Error(`Either size or color is required for variant at index ${index}`);
+            }
+
+            const quantity = Number(v.quantity);
+            totalQuantity += quantity;
+
+            return {
+                size: v.size || null,
+                color: v.color || null,
+                quantity
+            };
+        });
     }
 
+    else if (data.totalQuantity != null) {
+        totalQuantity = Number(data.totalQuantity);
+        variants = []; 
+    }
 
-    const totalQuantity = data.variants.reduce((sum, variant) => sum + variant.variantTotal, 0);
+    else {
+        throw new Error("Either variants or totalQuantity must be provided");
+    }
+
 
     const updatedData = {
         title: data.title,
@@ -134,20 +164,19 @@ async function updateProduct(id, data, files) {
         price: data.price,
         category: data.category,
         subCategory: data.subCategory,
-        variants: data.variants.map(variant => ({
-            size: variant.size,
-            variantTotal: variant.variantTotal,
-            colors: variant.colors.map(color => ({
-                color: color.color,
-                quantity: color.quantity
-            }))
-        })),
+        variants,
         totalQuantity,
-        imagePath: filePaths
+        imagePath: imagePaths,
+        isBestSeller: data.isBestSeller ?? product.isBestSeller,
+        isNewArrival: data.isNewArrival ?? product.isNewArrival,
+        isFeatured: data.isFeatured ?? product.isFeatured
     };
 
-
-    return await Product.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
+    return await Product.findByIdAndUpdate(
+        id,
+        updatedData,
+        { new: true, runValidators: true }
+    );
 }
 
 
