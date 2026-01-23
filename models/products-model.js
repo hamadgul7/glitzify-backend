@@ -18,6 +18,11 @@ const variantSchema = new mongoose.Schema({
     size: { 
         type: String, 
     }, 
+
+    sizeQuantity: { 
+        type: Number, 
+        default: 0 
+    },
     
     variantTotal: { 
         type: Number, 
@@ -68,7 +73,11 @@ const productSchema = new mongoose.Schema(
             }
         },
 
-        variants: [variantSchema],
+        variants: {
+            type: [variantSchema],
+            default: []
+        },
+
 
         totalQuantity: {
             type: Number

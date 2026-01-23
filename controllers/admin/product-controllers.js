@@ -14,7 +14,6 @@ async function addProduct(req, res) {
     }
 }
 
-
 async function updateProductById(req, res) {
     try {
         const { id } = req.params;

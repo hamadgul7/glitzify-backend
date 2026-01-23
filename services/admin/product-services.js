@@ -9,20 +9,63 @@ cloudinary.config({
 
 
 async function createProduct(data, files) {
-    if (!files || files.length === 0) throw new Error("At least one image is required");
+    if (!files || files.length === 0) {
+        throw new Error("At least one image is required");
+    }
 
     // Upload images to Cloudinary
     const imagePaths = await Promise.all(
-        files.map(async file => {
+        files.map(async (file) => {
             const result = await cloudinary.uploader.upload(file.path);
             return result.secure_url;
         })
     );
 
-    // Calculate total quantity from variants
-    const totalQuantity = data.variants.reduce((sum, variant) => sum + variant.variantTotal, 0);
+    let totalQuantity = 0;
+    let variants = [];
 
-    // Build product object according to schema
+    // Case 1: Variants exist
+    if (Array.isArray(data.variants) && data.variants.length > 0) {
+        variants = data.variants.map(variant => {
+            let variantTotal = 0;
+
+            // Sum color quantities if present
+            if (Array.isArray(variant.colors) && variant.colors.length > 0) {
+                variantTotal += variant.colors.reduce(
+                    (sum, color) => sum + Number(color.quantity || 0),
+                    0
+                );
+            }
+
+            // If size-only variant, use sizeQuantity
+            if ((!variant.colors || variant.colors.length === 0) && variant.sizeQuantity) {
+                variantTotal += Number(variant.sizeQuantity || 0);
+            }
+
+            return {
+                size: variant.size || null,
+                sizeQuantity: variant.sizeQuantity || 0, // save sizeQuantity
+                variantTotal,
+                colors: (variant.colors || []).map(color => ({
+                    color: color.color || null,
+                    quantity: color.quantity || 0
+                }))
+            };
+        });
+
+        // Calculate totalQuantity for product
+        totalQuantity = variants.reduce((sum, v) => sum + v.variantTotal, 0);
+    } 
+    // Case 2: No variants → use direct totalQuantity
+    else {
+        if (!data.totalQuantity) {
+            throw new Error(
+                "totalQuantity is required when no variants are provided"
+            );
+        }
+        totalQuantity = Number(data.totalQuantity);
+    }
+
     const productData = {
         title: data.title,
         description: data.description,
@@ -30,31 +73,14 @@ async function createProduct(data, files) {
         price: data.price,
         category: data.category,
         subCategory: data.subCategory,
-        variants: data.variants.map(variant => ({
-            size: variant.size,
-            variantTotal: variant.variantTotal,
-            colors: variant.colors.map(color => ({
-                color: color.color,
-                quantity: color.quantity
-            }))
-        })),
+        variants,          
         totalQuantity
     };
-
-    // Check SKU uniqueness if SKU exists
-    if (data.sku) {
-        const skuExist = await Product.findOne({ sku: data.sku });
-        if (skuExist && skuExist.title !== data.title) {
-            throw new Error(
-                `A product with the same SKU already exists but has a different title: "${skuExist.title}".`
-            );
-        }
-        productData.sku = data.sku;
-    }
 
     const product = new Product(productData);
     return await product.save();
 }
+
 
 
 async function getProductById(productId) {
