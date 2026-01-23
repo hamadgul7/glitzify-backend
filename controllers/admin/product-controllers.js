@@ -1,6 +1,5 @@
 const productService = require('../../services/admin/product-services');
 
-
 async function addProduct(req, res) {
     try {
         const data = JSON.parse(req.body.data);
@@ -13,6 +12,9 @@ async function addProduct(req, res) {
         res.status(400).json({ message: error.message });
     }
 }
+
+module.exports = { addProduct };
+
 
 async function updateProductById(req, res) {
     try {

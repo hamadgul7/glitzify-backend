@@ -21,49 +21,37 @@ async function createProduct(data, files) {
         })
     );
 
-    let totalQuantity = 0;
     let variants = [];
+    let totalQuantity = 0;
 
-    // Case 1: Variants exist
+    // Case 1: Variants provided
     if (Array.isArray(data.variants) && data.variants.length > 0) {
-        variants = data.variants.map(variant => {
-            let variantTotal = 0;
-
-            // Sum color quantities if present
-            if (Array.isArray(variant.colors) && variant.colors.length > 0) {
-                variantTotal += variant.colors.reduce(
-                    (sum, color) => sum + Number(color.quantity || 0),
-                    0
-                );
+        variants = data.variants.map((v, index) => {
+            if (v.quantity == null) {
+                throw new Error(`Quantity is required for variant at index ${index} (size: ${v.size}, color: ${v.color})`);
             }
 
-            // If size-only variant, use sizeQuantity
-            if ((!variant.colors || variant.colors.length === 0) && variant.sizeQuantity) {
-                variantTotal += Number(variant.sizeQuantity || 0);
+            // Ensure at least one of size or color exists
+            if (!v.size && !v.color) {
+                throw new Error(`Either size or color is required for variant at index ${index}`);
             }
+
+            const quantity = Number(v.quantity);
+            totalQuantity += quantity;
 
             return {
-                size: variant.size || null,
-                sizeQuantity: variant.sizeQuantity || 0, // save sizeQuantity
-                variantTotal,
-                colors: (variant.colors || []).map(color => ({
-                    color: color.color || null,
-                    quantity: color.quantity || 0
-                }))
+                size: v.size || null,
+                color: v.color || null,
+                quantity
             };
         });
-
-        // Calculate totalQuantity for product
-        totalQuantity = variants.reduce((sum, v) => sum + v.variantTotal, 0);
     } 
-    // Case 2: No variants → use direct totalQuantity
-    else {
-        if (!data.totalQuantity) {
-            throw new Error(
-                "totalQuantity is required when no variants are provided"
-            );
-        }
+    // Case 2: No variants → totalQuantity required
+    else if (data.totalQuantity != null) {
         totalQuantity = Number(data.totalQuantity);
+    } 
+    else {
+        throw new Error("Either variants or totalQuantity must be provided");
     }
 
     const productData = {
@@ -73,8 +61,11 @@ async function createProduct(data, files) {
         price: data.price,
         category: data.category,
         subCategory: data.subCategory,
-        variants,          
-        totalQuantity
+        variants,
+        totalQuantity,
+        isBestSeller: data.isBestSeller || false,
+        isNewArrival: data.isNewArrival || false,
+        isFeatured: data.isFeatured || false
     };
 
     const product = new Product(productData);
