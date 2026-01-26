@@ -77,33 +77,38 @@ async function getProductById(productId) {
 }
 
 
-async function getAllProducts(pageNo, limit) {
-    let query = Product.find();
-    let meta = {};
+async function getAllProducts(pageNo, limit, category, subCategory) {
+    const pageNumber = parseInt(pageNo) || 1;
+    const pageLimit = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * pageLimit;
 
-    if (pageNo && limit) {
-        const pageNumber = parseInt(pageNo);
-        const pageLimit = parseInt(limit);
-        const skip = (pageNumber - 1) * pageLimit;
-
-        const totalProducts = await Product.countDocuments();
-        const totalPages = Math.ceil(totalProducts / pageLimit);
-
-        query = query.skip(skip).limit(pageLimit);
-
-        meta = {
-            totalItems: totalProducts,
-            totalPages,
-            currentPage: pageNumber,
-            pageLimit,
-            nextPage: pageNumber < totalPages ? pageNumber + 1 : null,
-            previousPage: pageNumber > 1 ? pageNumber - 1 : null
-        };
+    // 🔹 Apply filter ONLY if both category & subCategory exist
+    let filter = {};
+    if (category && subCategory) {
+        filter = { category, subCategory };
     }
 
-    const products = await query;
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / pageLimit);
+
+    const products = await Product.find(filter)
+        .skip(skip)
+        .limit(pageLimit)
+        .sort({ createdAt: -1 }); // optional but recommended
+
+    const meta = {
+        totalItems: totalProducts,
+        totalPages,
+        currentPage: pageNumber,
+        pageLimit,
+        nextPage: pageNumber < totalPages ? pageNumber + 1 : null,
+        previousPage: pageNumber > 1 ? pageNumber - 1 : null
+    };
+
     return { products, meta };
 }
+
+
 
 
 async function updateProduct(id, data, files) {
@@ -182,10 +187,16 @@ async function deleteProduct(productId) {
     return product;
 }
 
+async function getBestSellerProducts() {
+    return await Product.find({ isBestSeller: true })
+        .sort({ createdAt: -1 }); 
+}
+
 module.exports = {
     createProduct,
     getProductById,
     getAllProducts,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getBestSellerProducts
 };

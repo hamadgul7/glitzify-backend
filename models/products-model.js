@@ -48,8 +48,11 @@ const productSchema = new mongoose.Schema({
         validate: {
             validator: function(value) {
                 const allowed = {
-                    "Jwellery": ["Ring", "Earrings", "Bracelet", "Pendants"],
-                    "Hair Accessories": ["Bows", "Clips"]
+                    "Jwellery": ["Ring", "Earrings", "Bracelet", "Pendants", "Necklace", "Hand cuffs"],
+                    "Hair Accessories": ["Bows", "Clips"],
+                    "Bags": [],
+                    "Press on Nails": []
+
                 };
                 return allowed[this.category]?.includes(value);
             },

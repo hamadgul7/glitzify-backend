@@ -20,4 +20,7 @@ router.put('/updateProduct/:id', upload.array("media", 10), productController.up
 
 router.delete('/deleteProduct/:id', productController.deleteProductById);
 
+router.get('/getBestSellers', productController.getBestSellerProducts);
+
+
 module.exports = router;

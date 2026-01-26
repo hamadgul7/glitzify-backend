@@ -47,13 +47,24 @@ async function getProductById(req, res) {
 
 async function getAllProducts(req, res) {
     try {
-        const { pageNo, limit } = req.query;
-        const result = await productService.getAllProducts(pageNo, limit);
-        res.status(200).json({ ...result, message: "Products retrieved successfully" });
+        const { pageNo, limit, category, subCategory } = req.query;
+
+        const result = await productService.getAllProducts(
+            pageNo,
+            limit,
+            category,
+            subCategory
+        );
+
+        res.status(200).json({
+            ...result,
+            message: "Products retrieved successfully"
+        });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 }
+
 
 async function deleteProductById(req, res) {
     try {
@@ -71,11 +82,25 @@ async function deleteProductById(req, res) {
     }
 }
 
+async function getBestSellerProducts(req, res) {
+    try {
+        const products = await productService.getBestSellerProducts();
+
+        res.status(200).json({
+            products,
+            count: products.length
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 
 module.exports = {
     addProduct,
     updateProductById,
     getProductById,
     getAllProducts,
-    deleteProductById
+    deleteProductById,
+    getBestSellerProducts
 };
