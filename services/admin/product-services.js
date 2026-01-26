@@ -1,5 +1,6 @@
 const Product = require('../../models/products-model');
 const cloudinary = require('cloudinary').v2;
+const ProductReviews = require('../../models/user/productReviews-model');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -71,9 +72,15 @@ async function createProduct(data, files) {
 
 
 async function getProductById(productId) {
+
     const product = await Product.findById(productId);
     if (!product) throw new Error("Product not found");
-    return product;
+
+    const reviews = await ProductReviews.find({ productId: productId });
+
+    const outOfStock = product.totalQuantity === 0;
+
+    return { ...product.toObject(), reviews, outOfStock };
 }
 
 
@@ -82,7 +89,6 @@ async function getAllProducts(pageNo, limit, category, subCategory) {
     const pageLimit = parseInt(limit) || 10;
     const skip = (pageNumber - 1) * pageLimit;
 
-    // 🔹 Apply filter ONLY if both category & subCategory exist
     let filter = {};
     if (category && subCategory) {
         filter = { category, subCategory };
@@ -94,7 +100,7 @@ async function getAllProducts(pageNo, limit, category, subCategory) {
     const products = await Product.find(filter)
         .skip(skip)
         .limit(pageLimit)
-        .sort({ createdAt: -1 }); // optional but recommended
+        .sort({ createdAt: -1 });
 
     const meta = {
         totalItems: totalProducts,

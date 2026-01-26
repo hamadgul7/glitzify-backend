@@ -13,8 +13,6 @@ async function addProduct(req, res) {
     }
 }
 
-module.exports = { addProduct };
-
 
 async function updateProductById(req, res) {
     try {
@@ -38,8 +36,12 @@ async function getProductById(req, res) {
     try {
         const { id } = req.params;
 
-        const product = await productService.getProductById(id);
-        res.status(200).json({ product, message: "Product retrieved successfully" });
+        const productWithReviews = await productService.getProductById(id);
+
+        res.status(200).json({ 
+            product: productWithReviews, 
+            message: "Product retrieved successfully" 
+        });
     } catch (error) {
         res.status(404).json({ message: error.message });
     }
