@@ -22,5 +22,9 @@ router.delete('/deleteProduct/:id', productController.deleteProductById);
 
 router.get('/getBestSellers', productController.getBestSellerProducts);
 
+router.get('/getNewArrivals', productController.getNewArrivalProducts);
+
+router.get('/getFeatured', productController.getFeaturedProducts);
+
 
 module.exports = router;

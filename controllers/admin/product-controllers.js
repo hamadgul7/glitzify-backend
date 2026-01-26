@@ -97,6 +97,31 @@ async function getBestSellerProducts(req, res) {
     }
 }
 
+async function getNewArrivalProducts(req, res) {
+    try {
+        const products = await productService.getNewArrivalProducts();
+
+        res.status(200).json({
+            products,
+            count: products.length
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+async function getFeaturedProducts(req, res) {
+    try {
+        const products = await productService.getFeaturedProducts();
+
+        res.status(200).json({
+            products,
+            count: products.length
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
 
 module.exports = {
     addProduct,
@@ -104,5 +129,7 @@ module.exports = {
     getProductById,
     getAllProducts,
     deleteProductById,
-    getBestSellerProducts
+    getBestSellerProducts,
+    getNewArrivalProducts,
+    getFeaturedProducts
 };

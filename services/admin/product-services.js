@@ -195,7 +195,20 @@ async function deleteProduct(productId) {
 
 async function getBestSellerProducts() {
     return await Product.find({ isBestSeller: true })
-        .sort({ createdAt: -1 }); 
+        .sort({ updatedAt: -1 }) 
+        .limit(4); 
+}
+
+async function getNewArrivalProducts() {
+    return await Product.find({ isNewArrival: true })
+        .sort({ updatedAt: -1 }) 
+        .limit(4); 
+}
+
+async function getFeaturedProducts() {
+    return await Product.find({ isFeatured: true })
+        .sort({ updatedAt: -1 }) 
+        .limit(4); 
 }
 
 module.exports = {
@@ -204,5 +217,7 @@ module.exports = {
     getAllProducts,
     updateProduct,
     deleteProduct,
-    getBestSellerProducts
+    getBestSellerProducts,
+    getNewArrivalProducts,
+    getFeaturedProducts
 };
