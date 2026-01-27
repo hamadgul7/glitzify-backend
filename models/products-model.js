@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema({
 
     category: {
         type: String,
-        enum: ["Jwellery", "Hair Accessories"],
+        enum: ["jwellery", "hair-accessories"],
         required: true
     },
 
@@ -48,17 +48,20 @@ const productSchema = new mongoose.Schema({
         validate: {
             validator: function(value) {
                 const allowed = {
-                    "Jwellery": ["Ring", "Earrings", "Bracelet", "Pendants", "Necklace", "Hand cuffs"],
-                    "Hair Accessories": ["Bows", "Clips"],
-                    "Bags": [],
-                    "Press on Nails": []
-
+                    "jwellery": ["ring", "earrings", "bracelet", "pendants", "necklace", "hand-cuffs"],
+                    "hair-accessories": ["bows", "clips"],
+                    "bags": [],
+                    "press-on-nails": []
                 };
                 return allowed[this.category]?.includes(value);
             },
-            message: props => `${props.value} is not valid for ${props.instance.category}`
+            message: props => {
+                const category = props.instance.category;
+                return `Oops! "${props.value}" is not a valid subcategory for "${category}". Please choose a correct option.`;
+            }
         }
     },
+
 
     variants: {
         type: [variantSchema],
