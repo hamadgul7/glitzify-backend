@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 function verifyToken(req, res, next) {
     const authHeader = req.header("Authorization");
+
     if (!authHeader) {
         return res.status(401).json({
             message: "Access Denied! header empty",
@@ -22,12 +23,11 @@ function verifyToken(req, res, next) {
 
         next();
     } catch (error) {
-        console.error("JWT Verfication Error:",error.message);
+        console.error("JWT Verification Error:", error.message);
         return res.status(403).json({
             message: "Session expired. Please log in again.",
         });
     }
 }
-
 
 module.exports = verifyToken;

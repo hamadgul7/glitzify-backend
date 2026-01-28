@@ -97,10 +97,44 @@ async function getAllProducts(pageNo, limit, category, subCategory) {
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / pageLimit);
 
-    const products = await Product.find(filter)
-        .skip(skip)
-        .limit(pageLimit)
-        .sort({ createdAt: -1 });
+    const products = await Product.aggregate([
+        { $match: filter },
+
+        {
+            $lookup: {
+                from: "productreviews",
+                localField: "_id",
+                foreignField: "productId",
+                as: "reviews"
+            }
+        },
+
+        {
+            $addFields: {
+                rating: {
+                    $cond: [
+                        { $eq: [{ $size: "$reviews" }, 0] },
+                        0,
+                        { $avg: "$reviews.rating" }
+                    ]
+                }
+            }
+        },
+
+        {
+            $addFields: {
+                rating: { $round: ["$rating", 1] }
+            }
+        },
+
+        {
+            $project: { reviews: 0 }
+        },
+
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: pageLimit }
+    ]);
 
     const meta = {
         totalItems: totalProducts,
@@ -113,7 +147,6 @@ async function getAllProducts(pageNo, limit, category, subCategory) {
 
     return { products, meta };
 }
-
 
 
 

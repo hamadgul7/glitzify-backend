@@ -10,6 +10,7 @@ const productReviewSchema = mongoose.Schema(
 
         rating:{
             type: Number,
+            default: 0,
             required: [true, "Rating is requied"]
         },
 
@@ -18,11 +19,11 @@ const productReviewSchema = mongoose.Schema(
             required: [true, "Comment is required"]
         },
 
-        // userId: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: "User", 
-        //     required: [true, "User Id is required"]
-        // },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User", 
+            required: [true, "User Id is required"]
+        },
         
         productId: {
             type: mongoose.Schema.Types.ObjectId,
