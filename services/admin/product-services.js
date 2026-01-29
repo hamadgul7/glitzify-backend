@@ -8,6 +8,26 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const SUBCATEGORY_IMAGES = {
+    ring: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727600/ring_dyrroi.jpg",
+    earrings: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727792/earrings_aacs8s.jpg",
+    bracelet: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727892/bracelet_d13vxr.jpg",
+    pendants: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727948/pendants_am2h1g.jpg",
+    necklace: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727985/necklace_ors6xz.jpg",
+    "hand-cuffs": "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728161/hand-cuffs_j8folf.jpg",
+
+    bows: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728215/bows_sglwb3.jpg",
+    clips: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728258/clips_pqcfdd.jpg",
+
+    "hand-bags": "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728327/hand-bags_toftzm.jpg",
+    wallets: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728358/wallets_sverit.jpg",
+    clutches: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728388/clutches_lkdei1.jpg",
+
+    "daily-wear": "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728438/daily-wear_mesugt.jpg",
+    "festive-collection": "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728505/festive-collection_a7qeei.jpg"
+};
+
+
 
 async function createProduct(data, files) {
     if (!files || files.length === 0) {
@@ -244,6 +264,38 @@ async function getFeaturedProducts() {
         .limit(4); 
 }
 
+async function getCategorySummary(category) {
+    const result = await Product.aggregate([
+        {
+            $match: { category }
+        },
+        {
+            $group: {
+                _id: "$subCategory",
+                count: { $sum: 1 }
+            }
+        }
+    ]);
+
+    const totalCategoryCount = result.reduce(
+        (sum, item) => sum + item.count,
+        0
+    );
+
+    const subCategories = result.map(item => ({
+        name: item._id,
+        count: item.count,
+        image: SUBCATEGORY_IMAGES[item._id] || null
+    }));
+
+    return {
+        category,
+        totalCategoryCount,
+        subCategories
+    };
+}
+
+
 module.exports = {
     createProduct,
     getProductById,
@@ -252,5 +304,6 @@ module.exports = {
     deleteProduct,
     getBestSellerProducts,
     getNewArrivalProducts,
-    getFeaturedProducts
+    getFeaturedProducts,
+    getCategorySummary
 };

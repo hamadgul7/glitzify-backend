@@ -25,5 +25,7 @@ router.get('/getNewArrivals', productController.getNewArrivalProducts);
 
 router.get('/getFeatured', productController.getFeaturedProducts);
 
+router.get("/category", productController.getProductsByCategory);
+
 
 module.exports = router;

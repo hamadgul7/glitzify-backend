@@ -123,6 +123,28 @@ async function getFeaturedProducts(req, res) {
     }
 }
 
+async function getProductsByCategory(req, res) {
+    try {
+        const { category } = req.query;
+
+        const data = await productService.getCategorySummary(category);
+
+        return res.status(200).json({
+            success: true,
+            message: "Category summary fetched successfully",
+            data
+        });
+
+    } catch (error) {
+        console.error("Category summary error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+}
+
 module.exports = {
     addProduct,
     updateProductById,
@@ -131,5 +153,6 @@ module.exports = {
     deleteProductById,
     getBestSellerProducts,
     getNewArrivalProducts,
-    getFeaturedProducts
+    getFeaturedProducts,
+    getProductsByCategory
 };

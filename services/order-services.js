@@ -99,14 +99,11 @@ async function placeOrder(body) {
     return order;
 }
 
-/* ---------------- EMAIL SERVICE ---------------- */
 
 async function sendOrderEmail(user, cartItems, totalAmount) {
-    // Build product rows with variants
     const productRows = cartItems.map(item => {
         const product = item.product;
 
-        // Each variant is a separate row
         return item.variants.map(variant => `
             <tr>
                 <td style="border:1px solid #ddd; padding:8px;">
@@ -150,7 +147,7 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
-        tls: { rejectUnauthorized: false } // optional, avoids certificate issues
+        tls: { rejectUnauthorized: false } 
     });
 
     await transporter.sendMail({
