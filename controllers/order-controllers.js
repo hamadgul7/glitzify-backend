@@ -1,13 +1,11 @@
 const orderService = require("../services/order-services");
 
-async function addOrderDetails(req, res) {
+async function placeOrder(req, res) {
     try {
-        const result = await orderService.addOrderDetails(req.body);
+        const order = await orderService.placeOrder(req.body);
 
         res.status(201).json({
             message: "Order placed successfully",
-            orderId: result.orderId,
-            totalAmount: result.totalAmount
         });
 
     } catch (error) {
@@ -19,5 +17,5 @@ async function addOrderDetails(req, res) {
 }
 
 module.exports = {
-    addOrderDetails
+    placeOrder
 };

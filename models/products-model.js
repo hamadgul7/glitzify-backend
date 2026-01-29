@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema({
 
     category: {
         type: String,
-        enum: ["jewellery", "hair-accessories"],
+        enum: ["jewellery", "hair-accessories", "bags", "press-on-nails"],
         required: true
     },
 
@@ -50,8 +50,8 @@ const productSchema = new mongoose.Schema({
                 const allowed = {
                     "jewellery": ["ring", "earrings", "bracelet", "pendants", "necklace", "hand-cuffs"],
                     "hair-accessories": ["bows", "clips"],
-                    "bags": [],
-                    "press-on-nails": []
+                    "bags": ["hand-bags", "wallets", "clutches"],
+                    "press-on-nails": ["daily-wear", "festive-collection"]
                 };
                 return allowed[this.category]?.includes(value);
             },

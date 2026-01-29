@@ -4,6 +4,8 @@ const db = require('./config/db.js');
 
 const productRoutes = require('./routes/admin/product-routes.js');
 const authRoutes = require('./routes/user/auth-routes.js');
+const reviewRoutes = require('./routes/user/productReview-routes');
+const orderRoutes = require('./routes/order-routes');
 
 
 const cors = require('cors');
@@ -20,6 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/admin', productRoutes);
 app.use('/auth', authRoutes);
+app.use('/user', reviewRoutes);
+app.use('/user', orderRoutes);
 
 
 db.connectToDatabase()
