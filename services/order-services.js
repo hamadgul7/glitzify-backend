@@ -153,7 +153,7 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
                                 ${qty}
                             </td>
                             <td style="border:1px solid #ddd; padding:8px; text-align:center;">
-                                $${price * qty}
+                                RS.${price * qty}
                             </td>
                         </tr>
                     `;
@@ -181,7 +181,7 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
         </table>
 
         <p style="margin-top:16px;">
-            <strong>Total Amount:</strong> $${totalAmount}
+            <strong>Total Amount:</strong> RS.${totalAmount}
         </p>
     `;
 
