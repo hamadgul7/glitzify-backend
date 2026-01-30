@@ -6,7 +6,6 @@ const nodemailer = require("nodemailer");
 async function placeOrder(body) {
     const { userId, data, cartItems, shippingCost = 0 } = body;
 
-    // 1️⃣ Validate user
     if (!userId) {
         throw { statusCode: 400, message: "No userId provided" };
     }
@@ -16,7 +15,6 @@ async function placeOrder(body) {
         throw { statusCode: 404, message: "User not found" };
     }
 
-    // 2️⃣ Build userInfo
     const userInfo = {
         firstname: user.firstname,
         lastname: user.lastname,
@@ -29,23 +27,35 @@ async function placeOrder(body) {
     };
 
     let subTotal = 0;
+    const finalCartItems = [];
 
-    // 3️⃣ Validate stock & deduct quantity per variant
     for (const item of cartItems) {
-        const { product, variants } = item;
+        const { productId, variants } = item;
 
-        if (!product || !product._id) {
-            throw { statusCode: 400, message: "Product ID missing in cart item" };
+        if (!productId) {
+            throw { statusCode: 400, message: "productId is required" };
         }
 
-        const dbProduct = await Product.findById(product._id);
+        const dbProduct = await Product.findById(productId);
         if (!dbProduct) {
-            throw { statusCode: 404, message: `Product ${product.title} not found` };
+            throw { statusCode: 404, message: "Product not found" };
         }
 
         if (!variants || !variants.length) {
-            throw { statusCode: 400, message: `No variants provided for product ${product.title}` };
+            throw {
+                statusCode: 400,
+                message: `No variants provided for product ${dbProduct.title}`
+            };
         }
+
+        const productSnapshot = {
+            _id: dbProduct._id,
+            title: dbProduct.title,
+            price: dbProduct.price,
+            imagePath: dbProduct.imagePath
+        };
+
+        const finalVariants = [];
 
         for (const variantItem of variants) {
             const { quantity, selectedVariant } = variantItem;
@@ -58,85 +68,121 @@ async function placeOrder(body) {
             if (!variant) {
                 throw {
                     statusCode: 404,
-                    message: `Variant not found for product ${product.title} (${selectedVariant.size}, ${selectedVariant.color})`
+                    message: `Variant not found for ${dbProduct.title} (${selectedVariant.size}, ${selectedVariant.color})`
                 };
             }
 
             if (variant.quantity < quantity) {
                 throw {
                     statusCode: 400,
-                    message: `Not enough stock for product ${product.title} (${selectedVariant.size}, ${selectedVariant.color})`
+                    message: `Insufficient stock for ${dbProduct.title} (${selectedVariant.size}, ${selectedVariant.color})`
                 };
             }
 
-            // Deduct stock
             variant.quantity -= quantity;
             dbProduct.totalQuantity -= quantity;
 
-            // Add to subtotal
-            subTotal += product.price * quantity;
+            subTotal += dbProduct.price * quantity;
+
+            finalVariants.push({
+                quantity,
+                selectedVariant
+            });
         }
 
         await dbProduct.save();
+
+        finalCartItems.push({
+            product: productSnapshot,
+            variants: finalVariants
+        });
     }
 
     const totalAmount = subTotal + shippingCost;
 
-    // 4️⃣ Create order
     const order = await Order.create({
         userId,
         userInfo,
-        cartItems,
+        cartItems: finalCartItems,
         status: "Pending",
         subTotal,
         shippingCost,
         totalAmount
     });
 
-    // 5️⃣ Send confirmation email
-    await sendOrderEmail(userInfo, cartItems, totalAmount);
+    await sendOrderEmail(userInfo, finalCartItems, totalAmount);
 
     return order;
 }
 
 
-async function sendOrderEmail(user, cartItems, totalAmount) {
-    const productRows = cartItems.map(item => {
-        const product = item.product;
 
-        return item.variants.map(variant => `
-            <tr>
-                <td style="border:1px solid #ddd; padding:8px;">
-                    <img src="${product.imagePath[0]}" width="80" />
-                </td>
-                <td style="border:1px solid #ddd; padding:8px;">
-                    ${product.title} (${variant.selectedVariant.size}, ${variant.selectedVariant.color})
-                </td>
-                <td style="border:1px solid #ddd; padding:8px; text-align:center;">
-                    ${variant.quantity}
-                </td>
-                <td style="border:1px solid #ddd; padding:8px; text-align:center;">
-                    $${product.price * variant.quantity}
-                </td>
-            </tr>
-        `).join("");
-    }).join("");
+
+async function sendOrderEmail(user, cartItems, totalAmount) {
+    if (!user?.email) {
+        throw {
+            statusCode: 400,
+            message: "User email not found. Cannot send order confirmation email."
+        };
+    }
+
+    const productRows = cartItems
+        .map(item => {
+            const product = item.product;
+
+            return item.variants
+                .map(variant => {
+                    const size = variant?.selectedVariant?.size || "N/A";
+                    const color = variant?.selectedVariant?.color || "N/A";
+                    const qty = variant.quantity || 0;
+                    const price = product.price || 0;
+                    const image =
+                        Array.isArray(product.imagePath) && product.imagePath.length
+                            ? product.imagePath[0]
+                            : "";
+
+                    return `
+                        <tr>
+                            <td style="border:1px solid #ddd; padding:8px;">
+                                ${image ? `<img src="${image}" width="80" />` : ""}
+                            </td>
+                            <td style="border:1px solid #ddd; padding:8px;">
+                                ${product.title} (${size}, ${color})
+                            </td>
+                            <td style="border:1px solid #ddd; padding:8px; text-align:center;">
+                                ${qty}
+                            </td>
+                            <td style="border:1px solid #ddd; padding:8px; text-align:center;">
+                                $${price * qty}
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join("");
+        })
+        .join("");
 
     const html = `
-        <h2>Hello ${user.firstname},</h2>
-        <p>Thank you for your order!</p>
+        <h2>Hello ${user.firstname || "Customer"},</h2>
+        <p>Thank you for your order! 🎉</p>
 
         <table width="100%" style="border-collapse:collapse;">
-            <tr>
-                <th>Product</th>
-                <th>Name & Variant</th>
-                <th>Qty</th>
-                <th>Total</th>
-            </tr>
-            ${productRows}
+            <thead>
+                <tr>
+                    <th style="border:1px solid #ddd; padding:8px;">Product</th>
+                    <th style="border:1px solid #ddd; padding:8px;">Name & Variant</th>
+                    <th style="border:1px solid #ddd; padding:8px;">Qty</th>
+                    <th style="border:1px solid #ddd; padding:8px;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${productRows}
+            </tbody>
         </table>
 
-        <p><strong>Total Amount:</strong> $${totalAmount}</p>
+        <p style="margin-top:16px;">
+            <strong>Total Amount:</strong> $${totalAmount}
+        </p>
     `;
 
     const transporter = nodemailer.createTransport({
@@ -146,17 +192,17 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
-        },
-        tls: { rejectUnauthorized: false } 
+        }
     });
 
     await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: user.email,
+        from: `"Your Store" <${process.env.EMAIL_USER}>`,
+        to: user.email, 
         subject: "Order Confirmation",
         html
     });
 }
+
 
 module.exports = {
     placeOrder
