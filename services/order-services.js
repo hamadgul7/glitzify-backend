@@ -115,9 +115,6 @@ async function placeOrder(body) {
     return order;
 }
 
-
-
-
 async function sendOrderEmail(user, cartItems, totalAmount) {
     if (!user?.email) {
         throw {
@@ -204,6 +201,27 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
 }
 
 
+async function getAllOrdersService(page, limit) {
+    const skip = (page - 1) * limit;
+
+    const [orders, totalOrders] = await Promise.all([
+        Order.find({})
+            .sort({ createdAt: -1 })  
+            .skip(skip)
+            .limit(limit),
+        Order.countDocuments()
+    ]);
+
+    return {
+        orders,
+        totalOrders,
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit)
+    };
+}
+
+
 module.exports = {
-    placeOrder
+    placeOrder,
+    getAllOrdersService
 };

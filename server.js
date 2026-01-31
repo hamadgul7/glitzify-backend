@@ -21,6 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use('/admin', productRoutes);
+app.use('/admin', orderRoutes);
+
 app.use('/user', productRoutes);
 
 app.use('/auth', authRoutes);

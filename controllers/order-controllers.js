@@ -16,6 +16,30 @@ async function placeOrder(req, res) {
     }
 }
 
+async function getAllOrders(req, res) {
+    try {
+        const page = parseInt(req.query.pageNo) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const result = await orderService.getAllOrdersService(page, limit);
+
+        res.status(200).json({
+            success: true,
+            message: "Orders fetched successfully",
+            totalOrders: result.totalOrders,
+            totalPages: result.totalPages,
+            currentPage: result.currentPage,
+            data: result.orders
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 module.exports = {
-    placeOrder
+    placeOrder,
+    getAllOrders
 };
