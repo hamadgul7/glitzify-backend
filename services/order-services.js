@@ -220,8 +220,22 @@ async function getAllOrdersService(page, limit) {
     };
 }
 
+async function updateOrderStatusService(orderId, status) {
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+        throw new Error("Order not found");
+    }
+
+    order.status = status;
+    await order.save();
+
+    return order;
+}
+
 
 module.exports = {
     placeOrder,
-    getAllOrdersService
+    getAllOrdersService,
+    updateOrderStatusService    
 };

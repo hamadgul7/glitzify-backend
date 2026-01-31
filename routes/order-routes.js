@@ -7,4 +7,6 @@ router.post("/place-order", orderController.placeOrder);
 
 router.get("/allOrders", orderController.getAllOrders);
 
+router.patch("/updateOrderStatus/:id", orderController.updateOrderStatus);
+
 module.exports = router;
