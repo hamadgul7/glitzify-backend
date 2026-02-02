@@ -9,4 +9,7 @@ router.get("/allOrders", orderController.getAllOrders);
 
 router.patch("/updateOrderStatus/:id", orderController.updateOrderStatus);
 
+router.get("/orders/:userId", orderController.getUserOrders);
+
+
 module.exports = router;

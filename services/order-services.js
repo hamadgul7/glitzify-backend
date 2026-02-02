@@ -233,9 +233,17 @@ async function updateOrderStatusService(orderId, status) {
     return order;
 }
 
+async function getUserOrdersService(userId) {
+    const orders = await Order.find({ userId })
+        .sort({ createdAt: -1 }); // 🔥 latest first
+
+    return orders;
+}
+
 
 module.exports = {
     placeOrder,
     getAllOrdersService,
-    updateOrderStatusService    
+    updateOrderStatusService,
+    getUserOrdersService    
 };

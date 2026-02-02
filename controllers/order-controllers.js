@@ -69,8 +69,28 @@ async function updateOrderStatus(req, res) {
     }
 }
 
+async function getUserOrders(req, res) {
+    try {
+        const { userId } = req.params;
+
+        const orders = await orderService.getUserOrdersService(userId);
+
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            data: orders
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 module.exports = {
     placeOrder,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    getUserOrders
 };
