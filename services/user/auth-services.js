@@ -76,6 +76,7 @@ async function verifyOtpService({ email, otp }) {
         lastname: user.lastname,
         email: user.email,
         role: user.role,
+        wishlist: user.wishlist,
         createdAt: user.createdAt,
     };
 }

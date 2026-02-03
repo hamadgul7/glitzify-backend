@@ -8,6 +8,7 @@ const reviewRoutes = require('./routes/user/productReview-routes');
 const orderRoutes = require('./routes/order-routes');
 const dashboardStatsRoutes = require('./routes/admin/dashboardStats-routes.js');
 const userDetailsRoutes = require('./routes/user/profileDetail-routes.js');
+const wishlistRoutes = require('./routes/user/wishlist-routes.js');
 
 
 const cors = require('cors');
@@ -31,6 +32,7 @@ app.use('/user', userDetailsRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', reviewRoutes);
 app.use('/user', orderRoutes);
+app.use('/user', wishlistRoutes);
 
 
 db.connectToDatabase()
