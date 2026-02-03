@@ -7,6 +7,7 @@ const authRoutes = require('./routes/user/auth-routes.js');
 const reviewRoutes = require('./routes/user/productReview-routes');
 const orderRoutes = require('./routes/order-routes');
 const dashboardStatsRoutes = require('./routes/admin/dashboardStats-routes.js');
+const userDetailsRoutes = require('./routes/user/profileDetail-routes.js');
 
 
 const cors = require('cors');
@@ -26,7 +27,7 @@ app.use('/admin', orderRoutes);
 app.use('/admin', dashboardStatsRoutes);
 
 app.use('/user', productRoutes);
-
+app.use('/user', userDetailsRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', reviewRoutes);
 app.use('/user', orderRoutes);
