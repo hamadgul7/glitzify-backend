@@ -104,14 +104,23 @@ async function getProductById(productId) {
 }
 
 
-async function getAllProducts(pageNo, limit, category, subCategory) {
+async function getAllProducts(pageNo, limit, category, subCategory, search) {
     const pageNumber = parseInt(pageNo) || 1;
     const pageLimit = parseInt(limit) || 10;
     const skip = (pageNumber - 1) * pageLimit;
 
     let filter = {};
-    if (category && subCategory) {
-        filter = { category, subCategory };
+
+    if (category) filter.category = category;
+    if (subCategory) filter.subCategory = subCategory;
+
+    if (search) {
+        const regexPattern = `${search.replace(/s$/, "")}s?`;
+
+        filter.title = {
+            $regex: regexPattern,
+            $options: "i" 
+        };
     }
 
     const totalProducts = await Product.countDocuments(filter);
@@ -147,9 +156,7 @@ async function getAllProducts(pageNo, limit, category, subCategory) {
             }
         },
 
-        {
-            $project: { reviews: 0 }
-        },
+        { $project: { reviews: 0 } },
 
         { $sort: { createdAt: -1 } },
         { $skip: skip },
@@ -167,7 +174,6 @@ async function getAllProducts(pageNo, limit, category, subCategory) {
 
     return { products, meta };
 }
-
 
 
 async function updateProduct(id, data, files) {

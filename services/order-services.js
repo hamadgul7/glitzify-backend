@@ -248,7 +248,7 @@ async function updateOrderStatusService(orderId, status) {
 
 async function getUserOrdersService(userId) {
     const orders = await Order.find({ userId })
-        .sort({ createdAt: -1 }); // 🔥 latest first
+        .sort({ createdAt: -1 }); 
 
     return orders;
 }

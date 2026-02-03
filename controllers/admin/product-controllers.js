@@ -49,13 +49,14 @@ async function getProductById(req, res) {
 
 async function getAllProducts(req, res) {
     try {
-        const { pageNo, limit, category, subCategory } = req.query;
+        const { pageNo, limit, category, subCategory, search } = req.query;
 
         const result = await productService.getAllProducts(
             pageNo,
             limit,
             category,
-            subCategory
+            subCategory,
+            search
         );
 
         res.status(200).json({
@@ -66,6 +67,7 @@ async function getAllProducts(req, res) {
         res.status(400).json({ message: error.message });
     }
 }
+
 
 
 async function deleteProductById(req, res) {
