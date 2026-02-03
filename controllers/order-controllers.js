@@ -20,8 +20,13 @@ async function getAllOrders(req, res) {
     try {
         const page = parseInt(req.query.pageNo) || 1;
         const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || "";
 
-        const result = await orderService.getAllOrdersService(page, limit);
+        const result = await orderService.getAllOrdersService(
+            page,
+            limit,
+            search
+        );
 
         res.status(200).json({
             success: true,
@@ -38,6 +43,7 @@ async function getAllOrders(req, res) {
         });
     }
 }
+
 
 async function updateOrderStatus(req, res) {
     try {

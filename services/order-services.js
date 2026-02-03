@@ -201,15 +201,27 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
 }
 
 
-async function getAllOrdersService(page, limit) {
+async function getAllOrdersService(page, limit, search) {
     const skip = (page - 1) * limit;
 
+    const filter = {};
+
+    if (search) {
+        const regexPattern = `${search.replace(/s$/, "")}s?`;
+
+        filter["cartItems.product.title"] = {
+            $regex: regexPattern,
+            $options: "i"
+        };
+    }
+
+
     const [orders, totalOrders] = await Promise.all([
-        Order.find({})
-            .sort({ createdAt: -1 })  
+        Order.find(filter)
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit),
-        Order.countDocuments()
+        Order.countDocuments(filter)
     ]);
 
     return {
@@ -219,6 +231,7 @@ async function getAllOrdersService(page, limit) {
         totalPages: Math.ceil(totalOrders / limit)
     };
 }
+
 
 async function updateOrderStatusService(orderId, status) {
     const order = await Order.findById(orderId);
