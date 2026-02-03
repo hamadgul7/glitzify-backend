@@ -94,9 +94,21 @@ async function getUserOrders(req, res) {
     }
 }
 
+async function getOrderDetails(req, res) {
+    const { id } = req.params; 
+    const result = await orderService.getOrderDetailsById(id);
+
+    if (!result.success) {
+        return res.status(result.message === 'Order not found' ? 404 : 500).json(result);
+    }
+
+    res.status(200).json(result);
+}
+
 module.exports = {
     placeOrder,
     getAllOrders,
     updateOrderStatus,
-    getUserOrders
+    getUserOrders,
+    getOrderDetails
 };

@@ -52,6 +52,7 @@ async function placeOrder(body) {
             _id: dbProduct._id,
             title: dbProduct.title,
             price: dbProduct.price,
+            buyingCost: dbProduct.buyingCost,
             imagePath: dbProduct.imagePath
         };
 
@@ -253,10 +254,25 @@ async function getUserOrdersService(userId) {
     return orders;
 }
 
+async function getOrderDetailsById(orderId) {
+    try {
+        const order = await Order.findById(orderId);
+        
+        if (!order) {
+            return { success: false, message: 'Order not found' };
+        }
+
+        return { success: true, data: order };
+    } catch (error) {
+        console.error('Error fetching order:', error);
+        return { success: false, message: 'Server error' };
+    }
+}
 
 module.exports = {
     placeOrder,
     getAllOrdersService,
     updateOrderStatusService,
-    getUserOrdersService    
+    getUserOrdersService,
+    getOrderDetailsById    
 };

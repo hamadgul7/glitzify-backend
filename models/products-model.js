@@ -36,6 +36,11 @@ const productSchema = new mongoose.Schema({
         required: true
     }, 
 
+    buyingCost: {
+        type: Number,
+        required: true
+    },
+
     category: {
         type: String,
         enum: ["jewellery", "hair-accessories", "bags", "press-on-nails"],

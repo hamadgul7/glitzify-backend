@@ -6,6 +6,7 @@ const productRoutes = require('./routes/admin/product-routes.js');
 const authRoutes = require('./routes/user/auth-routes.js');
 const reviewRoutes = require('./routes/user/productReview-routes');
 const orderRoutes = require('./routes/order-routes');
+const dashboardStatsRoutes = require('./routes/admin/dashboardStats-routes.js');
 
 
 const cors = require('cors');
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/admin', productRoutes);
 app.use('/admin', orderRoutes);
+app.use('/admin', dashboardStatsRoutes);
 
 app.use('/user', productRoutes);
 

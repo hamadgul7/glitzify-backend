@@ -8,6 +8,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+
 const SUBCATEGORY_IMAGES = {
     ring: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727600/ring_dyrroi.jpg",
     earrings: "https://res.cloudinary.com/dxeumdgez/image/upload/v1769727792/earrings_aacs8s.jpg",
@@ -27,8 +28,7 @@ const SUBCATEGORY_IMAGES = {
     "festive-collection": "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728505/festive-collection_a7qeei.jpg"
 };
 
-
-
+//buying cost working
 async function createProduct(data, files) {
     if (!files || files.length === 0) {
         throw new Error("At least one image is required");
@@ -77,6 +77,7 @@ async function createProduct(data, files) {
         description: data.description,
         imagePath: imagePaths,
         price: data.price,
+        buyingCost: data.buyingCost,
         category: data.category,
         subCategory: data.subCategory,
         variants,
@@ -90,7 +91,7 @@ async function createProduct(data, files) {
     return await product.save();
 }
 
-
+//buying cost working
 async function getProductById(productId) {
 
     const product = await Product.findById(productId);
@@ -103,7 +104,7 @@ async function getProductById(productId) {
     return { ...product.toObject(), reviews, outOfStock };
 }
 
-
+//buying cost working
 async function getAllProducts(pageNo, limit, category, subCategory, search) {
     const pageNumber = parseInt(pageNo) || 1;
     const pageLimit = parseInt(limit) || 10;
@@ -175,7 +176,7 @@ async function getAllProducts(pageNo, limit, category, subCategory, search) {
     return { products, meta };
 }
 
-
+//buying cost working
 async function updateProduct(id, data, files) {
     const product = await Product.findById(id);
     if (!product) throw new Error("Product not found");
@@ -228,6 +229,7 @@ async function updateProduct(id, data, files) {
         title: data.title,
         description: data.description,
         price: data.price,
+        buyingCost: data.buyingCost,
         category: data.category,
         subCategory: data.subCategory,
         variants,
@@ -245,31 +247,36 @@ async function updateProduct(id, data, files) {
     );
 }
 
-
+//buying cost working
 async function deleteProduct(productId) {
     const product = await Product.findByIdAndDelete(productId);
     if (!product) throw new Error("Product not found for deletion");
     return product;
 }
 
+//buying cost working
 async function getBestSellerProducts() {
     return await Product.find({ isBestSeller: true })
         .sort({ updatedAt: -1 }) 
         .limit(4); 
 }
 
+//buying cost working
 async function getNewArrivalProducts() {
     return await Product.find({ isNewArrival: true })
         .sort({ updatedAt: -1 }) 
         .limit(4); 
 }
 
+//buying cost working
 async function getFeaturedProducts() {
     return await Product.find({ isFeatured: true })
         .sort({ updatedAt: -1 }) 
         .limit(4); 
 }
 
+
+//buying cost working
 async function getCategorySummary(category) {
     const result = await Product.aggregate([
         {

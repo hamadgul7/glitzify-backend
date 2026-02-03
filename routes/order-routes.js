@@ -11,5 +11,7 @@ router.patch("/updateOrderStatus/:id", orderController.updateOrderStatus);
 
 router.get("/orders/:userId", orderController.getUserOrders);
 
+router.get("/orderDetails/:id", orderController.getOrderDetails);
+
 
 module.exports = router;
