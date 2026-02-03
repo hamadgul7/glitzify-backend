@@ -43,7 +43,38 @@ async function removeFromWishlist(req, res) {
             success: true,
             message: "Product removed from wishlist",
         });
-        
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+async function getWishlist(req, res) {
+    try {
+        const userId = req.params.userId;
+        const page = parseInt(req.query.pageNo) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "userId is required"
+            });
+        }
+
+        const result = await wishlistService.getUserWishlist(userId, page, limit);
+
+        res.status(200).json({
+            success: true,
+            totalItems: result.totalItems,
+            totalPages: result.totalPages,
+            currentPage: page,
+            wishlist: result.wishlist
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -54,5 +85,6 @@ async function removeFromWishlist(req, res) {
 
 module.exports = {
     addToWishlist,
-    removeFromWishlist
+    removeFromWishlist,
+    getWishlist
 };

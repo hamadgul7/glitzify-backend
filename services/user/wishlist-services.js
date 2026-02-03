@@ -43,7 +43,34 @@ async function removeProductFromWishlist(userId, productId) {
 
 }
 
+
+async function getUserWishlist(userId, page, limit) {
+    const user = await User.findById(userId).populate({
+        path: "wishlist",
+        model: "Product"
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    const totalItems = user.wishlist.length;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedWishlist = user.wishlist.slice(startIndex, endIndex);
+
+    return {
+        totalItems,
+        totalPages,
+        wishlist: paginatedWishlist
+    };
+}
+
 module.exports = {
     addProductToWishlist,
-    removeProductFromWishlist
+    removeProductFromWishlist,
+    getUserWishlist
 };
