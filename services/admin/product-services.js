@@ -28,7 +28,32 @@ const SUBCATEGORY_IMAGES = {
     "festive-collection": "https://res.cloudinary.com/dxeumdgez/image/upload/v1769728505/festive-collection_a7qeei.jpg"
 };
 
-//buying cost working
+const STATIC_SUBCATEGORIES = {
+    jewellery: [
+        "ring",
+        "earrings",
+        "bracelet",
+        "pendants",
+        "necklace",
+        "hand-cuffs"
+    ],
+    "hair-accessories": [
+        "bows",
+        "clips"
+    ],
+    bags: [
+        "hand-bags",
+        "wallets",
+        "clutches"
+    ],
+    "press-on-nails": [
+        "daily-wear",
+        "festive-collection"
+    ]
+};
+
+
+
 async function createProduct(data, files) {
     if (!files || files.length === 0) {
         throw new Error("At least one image is required");
@@ -91,7 +116,7 @@ async function createProduct(data, files) {
     return await product.save();
 }
 
-//buying cost working
+
 async function getProductById(productId) {
 
     const product = await Product.findById(productId);
@@ -104,7 +129,7 @@ async function getProductById(productId) {
     return { ...product.toObject(), reviews, outOfStock };
 }
 
-//buying cost working
+
 async function getAllProducts(pageNo, limit, category, subCategory, search) {
     const pageNumber = parseInt(pageNo) || 1;
     const pageLimit = parseInt(limit) || 10;
@@ -176,7 +201,7 @@ async function getAllProducts(pageNo, limit, category, subCategory, search) {
     return { products, meta };
 }
 
-//buying cost working
+
 async function updateProduct(id, data, files) {
     const product = await Product.findById(id);
     if (!product) throw new Error("Product not found");
@@ -247,28 +272,30 @@ async function updateProduct(id, data, files) {
     );
 }
 
-//buying cost working
+
+
 async function deleteProduct(productId) {
     const product = await Product.findByIdAndDelete(productId);
     if (!product) throw new Error("Product not found for deletion");
     return product;
 }
 
-//buying cost working
+
+
 async function getBestSellerProducts() {
     return await Product.find({ isBestSeller: true })
         .sort({ updatedAt: -1 }) 
         .limit(4); 
 }
 
-//buying cost working
+
 async function getNewArrivalProducts() {
     return await Product.find({ isNewArrival: true })
         .sort({ updatedAt: -1 }) 
         .limit(4); 
 }
 
-//buying cost working
+
 async function getFeaturedProducts() {
     return await Product.find({ isFeatured: true })
         .sort({ updatedAt: -1 }) 
@@ -276,12 +303,9 @@ async function getFeaturedProducts() {
 }
 
 
-//buying cost working
 async function getCategorySummary(category) {
     const result = await Product.aggregate([
-        {
-            $match: { category }
-        },
+        { $match: { category } },
         {
             $group: {
                 _id: "$subCategory",
@@ -290,23 +314,38 @@ async function getCategorySummary(category) {
         }
     ]);
 
-    const totalCategoryCount = result.reduce(
-        (sum, item) => sum + item.count,
-        0
-    );
+    if (result.length > 0) {
+        const totalCategoryCount = result.reduce(
+            (sum, item) => sum + item.count,
+            0
+        );
 
-    const subCategories = result.map(item => ({
-        name: item._id,
-        count: item.count,
-        image: SUBCATEGORY_IMAGES[item._id] || null
-    }));
+        const subCategories = result.map(item => ({
+            name: item._id,
+            count: item.count,
+            image: SUBCATEGORY_IMAGES[item._id] || null
+        }));
+
+        return {
+            category,
+            totalCategoryCount,
+            subCategories
+        };
+    }
+
+    const staticSubs = STATIC_SUBCATEGORIES[category] || [];
 
     return {
         category,
-        totalCategoryCount,
-        subCategories
+        totalCategoryCount: 0,
+        subCategories: staticSubs.map(name => ({
+            name,
+            count: 0,
+            image: SUBCATEGORY_IMAGES[name] || null
+        }))
     };
 }
+
 
 
 module.exports = {
