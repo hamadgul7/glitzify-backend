@@ -27,5 +27,7 @@ router.get('/getFeatured', productController.getFeaturedProducts);
 
 router.get("/category", productController.getProductsByCategory);
 
+router.get("/relatedProducts/:productId", productController.getRelatedProducts);
+
 
 module.exports = router;

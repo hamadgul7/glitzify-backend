@@ -147,6 +147,34 @@ async function getProductsByCategory(req, res) {
     }
 }
 
+
+async function getRelatedProducts(req, res) {
+    try {
+        const productId = req.params.productId;
+
+        const result = await productService.getRelatedProducts(productId);
+
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            relatedProducts: result.relatedProducts
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+}
+
+
 module.exports = {
     addProduct,
     updateProductById,
@@ -156,5 +184,6 @@ module.exports = {
     getBestSellerProducts,
     getNewArrivalProducts,
     getFeaturedProducts,
-    getProductsByCategory
+    getProductsByCategory,
+    getRelatedProducts
 };

@@ -53,7 +53,6 @@ const STATIC_SUBCATEGORIES = {
 };
 
 
-
 async function createProduct(data, files) {
     if (!files || files.length === 0) {
         throw new Error("At least one image is required");
@@ -285,21 +284,21 @@ async function deleteProduct(productId) {
 async function getBestSellerProducts() {
     return await Product.find({ isBestSeller: true })
         .sort({ updatedAt: -1 }) 
-        .limit(4); 
+        .limit(8); 
 }
 
 
 async function getNewArrivalProducts() {
     return await Product.find({ isNewArrival: true })
         .sort({ updatedAt: -1 }) 
-        .limit(4); 
+        .limit(8); 
 }
 
 
 async function getFeaturedProducts() {
     return await Product.find({ isFeatured: true })
         .sort({ updatedAt: -1 }) 
-        .limit(4); 
+        .limit(8); 
 }
 
 
@@ -347,6 +346,36 @@ async function getCategorySummary(category) {
 }
 
 
+async function getRelatedProducts(productId) {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+        return null;
+    }
+
+    const colors = product.variants.map(function (variant) {
+        return variant.color;
+    });
+
+    let relatedProducts = await Product.find({
+        _id: { $ne: product._id },
+        category: product.category,
+        subCategory: product.subCategory,
+        "variants.color": { $in: colors }
+    }).limit(4);
+
+    if (relatedProducts.length === 0) {
+        relatedProducts = await Product.find({
+            _id: { $ne: product._id },
+            category: product.category,
+            subCategory: product.subCategory
+        }).limit(4);
+    }
+
+    return {
+        relatedProducts: relatedProducts
+    };
+}
 
 module.exports = {
     createProduct,
@@ -357,5 +386,6 @@ module.exports = {
     getBestSellerProducts,
     getNewArrivalProducts,
     getFeaturedProducts,
-    getCategorySummary
+    getCategorySummary,
+    getRelatedProducts
 };
