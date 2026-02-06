@@ -2,10 +2,13 @@ const ProductReviews = require("../../models/user/productReviews-model");
 const Product = require("../../models/products-model");
 const User = require("../../models/user/user-model");
 const Order = require("../../models/orders-model");
+const mongoose = require("mongoose");
 
 
 async function addReview(reviewData) {
     const { rating, comment, userId, productId } = reviewData;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const productObjectId = new mongoose.Types.ObjectId(productId);
 
     const productExists = await Product.findById(productId);
     if (!productExists) {
@@ -22,8 +25,8 @@ async function addReview(reviewData) {
     }
 
     const order = await Order.findOne({
-        userId,
-        "cartItems.productId": productId
+        userId: userObjectId,
+        "cartItems.product._id": productObjectId
     });
 
     if (!order) {

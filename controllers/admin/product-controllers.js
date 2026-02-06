@@ -47,6 +47,7 @@ async function getProductById(req, res) {
     }
 }
 
+
 async function getAllProducts(req, res) {
     try {
         const { pageNo, limit, category, subCategory, search } = req.query;

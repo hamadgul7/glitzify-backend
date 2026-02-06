@@ -117,16 +117,69 @@ async function createProduct(data, files) {
 
 
 async function getProductById(productId) {
-
     const product = await Product.findById(productId);
     if (!product) throw new Error("Product not found");
 
-    const reviews = await ProductReviews.find({ productId: productId });
+    // 🔹 Review statistics
+    const reviewStats = await ProductReviews.aggregate([
+        { $match: { productId: product._id } },
+        {
+            $group: {
+                _id: "$productId",
+                count: { $sum: 1 },
+                averageRating: { $avg: "$rating" }
+            }
+        }
+    ]);
+
+    const reviews = {
+        count: reviewStats.length ? reviewStats[0].count : 0,
+        averageRating: reviewStats.length
+            ? Number(reviewStats[0].averageRating.toFixed(1))
+            : 0
+    };
+
+    const userReview = await ProductReviews.aggregate([
+        { $match: { productId: product._id } },
+        {
+            $lookup: {
+                from: "users", 
+                localField: "userId",
+                foreignField: "_id",
+                as: "user"
+            }
+        },
+        {
+            $unwind: "$user"
+        },
+        {
+            $project: {
+                name: { $concat: ["$user.firstname", " ", "$user.lastname"] },
+                rating: 1,
+                comment: 1,              
+                createdAt: 1
+            }
+        },
+        { $sort: { createdAt: -1 } }
+    ]);
 
     const outOfStock = product.totalQuantity === 0;
 
-    return { ...product.toObject(), reviews, outOfStock };
+    const variantsWithStockStatus = product.variants.map(variant => ({
+        ...variant.toObject(),
+        outOfStock: variant.quantity === 0
+    }));
+
+    return {
+        ...product.toObject(),
+        reviews,        // stats
+        userReview,     // array with user full name
+        outOfStock,
+        variants: variantsWithStockStatus
+    };
 }
+
+
 
 
 async function getAllProducts(pageNo, limit, category, subCategory, search) {
@@ -141,10 +194,9 @@ async function getAllProducts(pageNo, limit, category, subCategory, search) {
 
     if (search) {
         const regexPattern = `${search.replace(/s$/, "")}s?`;
-
         filter.title = {
             $regex: regexPattern,
-            $options: "i" 
+            $options: "i"
         };
     }
 
@@ -177,7 +229,14 @@ async function getAllProducts(pageNo, limit, category, subCategory, search) {
 
         {
             $addFields: {
-                rating: { $round: ["$rating", 1] }
+                rating: { $round: ["$rating", 1] },
+                outOfStock: {
+                    $cond: [
+                        { $eq: ["$totalQuantity", 0] },
+                        true,
+                        false
+                    ]
+                }
             }
         },
 
@@ -199,6 +258,7 @@ async function getAllProducts(pageNo, limit, category, subCategory, search) {
 
     return { products, meta };
 }
+
 
 
 async function updateProduct(id, data, files) {
