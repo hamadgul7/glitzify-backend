@@ -120,7 +120,6 @@ async function getProductById(productId) {
     const product = await Product.findById(productId);
     if (!product) throw new Error("Product not found");
 
-    // 🔹 Review statistics
     const reviewStats = await ProductReviews.aggregate([
         { $match: { productId: product._id } },
         {
@@ -172,14 +171,12 @@ async function getProductById(productId) {
 
     return {
         ...product.toObject(),
-        reviews,        // stats
-        userReview,     // array with user full name
+        reviews,        
+        userReview,    
         outOfStock,
         variants: variantsWithStockStatus
     };
 }
-
-
 
 
 async function getAllProducts(pageNo, limit, category, subCategory, search) {

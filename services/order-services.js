@@ -30,7 +30,7 @@ async function placeOrder(body) {
     const finalCartItems = [];
 
     for (const item of cartItems) {
-        const { productId, variants } = item;
+        const { productId, variants, quantity } = item;
 
         if (!productId) {
             throw { statusCode: 400, message: "productId is required" };
@@ -41,13 +41,6 @@ async function placeOrder(body) {
             throw { statusCode: 404, message: "Product not found" };
         }
 
-        if (!variants || !variants.length) {
-            throw {
-                statusCode: 400,
-                message: `No variants provided for product ${dbProduct.title}`
-            };
-        }
-
         const productSnapshot = {
             _id: dbProduct._id,
             title: dbProduct.title,
@@ -56,47 +49,76 @@ async function placeOrder(body) {
             imagePath: dbProduct.imagePath
         };
 
-        const finalVariants = [];
+        if (variants && variants.length) {
+            const finalVariants = [];
 
-        for (const variantItem of variants) {
-            const { quantity, selectedVariant } = variantItem;
+            for (const variantItem of variants) {
+                const { quantity: varQty, selectedVariant } = variantItem;
 
-            const variant = dbProduct.variants.find(v =>
-                v.size === selectedVariant.size &&
-                v.color === selectedVariant.color
-            );
+                const variant = dbProduct.variants.find(v =>
+                    v.size === selectedVariant.size &&
+                    v.color === selectedVariant.color
+                );
 
-            if (!variant) {
-                throw {
-                    statusCode: 404,
-                    message: `Variant not found for ${dbProduct.title} (${selectedVariant.size}, ${selectedVariant.color})`
-                };
+                if (!variant) {
+                    throw {
+                        statusCode: 404,
+                        message: `Variant not found for ${dbProduct.title} (${selectedVariant.size}, ${selectedVariant.color})`
+                    };
+                }
+
+                if (variant.quantity < varQty) {
+                    throw {
+                        statusCode: 400,
+                        message: `Insufficient stock for ${dbProduct.title} (${selectedVariant.size}, ${selectedVariant.color})`
+                    };
+                }
+
+                variant.quantity -= varQty;
+                dbProduct.totalQuantity -= varQty;
+
+                subTotal += dbProduct.price * varQty;
+
+                finalVariants.push({
+                    quantity: varQty,
+                    selectedVariant
+                });
             }
 
-            if (variant.quantity < quantity) {
+            finalCartItems.push({
+                product: productSnapshot,
+                variants: finalVariants
+            });
+        } 
+
+        else if (quantity && !dbProduct.variants.length) {
+            if (dbProduct.totalQuantity < quantity) {
                 throw {
                     statusCode: 400,
-                    message: `Insufficient stock for ${dbProduct.title} (${selectedVariant.size}, ${selectedVariant.color})`
+                    message: `Insufficient stock for ${dbProduct.title}`
                 };
             }
 
-            variant.quantity -= quantity;
             dbProduct.totalQuantity -= quantity;
-
             subTotal += dbProduct.price * quantity;
 
-            finalVariants.push({
-                quantity,
-                selectedVariant
+            finalCartItems.push({
+                product: productSnapshot,
+                variants: [
+                    {
+                        quantity,
+                        selectedVariant: null
+                    }
+                ]
             });
+        } else {
+            throw {
+                statusCode: 400,
+                message: `Invalid cart item for ${dbProduct.title}`
+            };
         }
 
         await dbProduct.save();
-
-        finalCartItems.push({
-            product: productSnapshot,
-            variants: finalVariants
-        });
     }
 
     const totalAmount = subTotal + shippingCost;
@@ -116,6 +138,7 @@ async function placeOrder(body) {
     return order;
 }
 
+
 async function sendOrderEmail(user, cartItems, totalAmount) {
     if (!user?.email) {
         throw {
@@ -128,35 +151,64 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
         .map(item => {
             const product = item.product;
 
-            return item.variants
-                .map(variant => {
-                    const size = variant?.selectedVariant?.size || "N/A";
-                    const color = variant?.selectedVariant?.color || "N/A";
-                    const qty = variant.quantity || 0;
-                    const price = product.price || 0;
-                    const image =
-                        Array.isArray(product.imagePath) && product.imagePath.length
-                            ? product.imagePath[0]
-                            : "";
+            if (item.variants && item.variants.length) {
+                return item.variants
+                    .map(variant => {
+                        const size = variant?.selectedVariant?.size || "N/A";
+                        const color = variant?.selectedVariant?.color || "N/A";
+                        const qty = variant.quantity || 0;
+                        const price = product.price || 0;
+                        const image =
+                            Array.isArray(product.imagePath) && product.imagePath.length
+                                ? product.imagePath[0]
+                                : "";
 
-                    return `
-                        <tr>
-                            <td style="border:1px solid #ddd; padding:8px;">
-                                ${image ? `<img src="${image}" width="80" />` : ""}
-                            </td>
-                            <td style="border:1px solid #ddd; padding:8px;">
-                                ${product.title} (${size}, ${color})
-                            </td>
-                            <td style="border:1px solid #ddd; padding:8px; text-align:center;">
-                                ${qty}
-                            </td>
-                            <td style="border:1px solid #ddd; padding:8px; text-align:center;">
-                                RS.${price * qty}
-                            </td>
-                        </tr>
-                    `;
-                })
-                .join("");
+                        return `
+                            <tr>
+                                <td style="border:1px solid #ddd; padding:8px;">
+                                    ${image ? `<img src="${image}" width="80" />` : ""}
+                                </td>
+                                <td style="border:1px solid #ddd; padding:8px;">
+                                    ${product.title}${variant.selectedVariant ? ` (${size}, ${color})` : ""}
+                                </td>
+                                <td style="border:1px solid #ddd; padding:8px; text-align:center;">
+                                    ${qty}
+                                </td>
+                                <td style="border:1px solid #ddd; padding:8px; text-align:center;">
+                                    RS.${price * qty}
+                                </td>
+                            </tr>
+                        `;
+                    })
+                    .join("");
+            } 
+
+            else if (item.variants && item.variants.length === 1 && !item.variants[0].selectedVariant) {
+                const qty = item.variants[0].quantity || 0;
+                const price = product.price || 0;
+                const image =
+                    Array.isArray(product.imagePath) && product.imagePath.length
+                        ? product.imagePath[0]
+                        : "";
+
+                return `
+                    <tr>
+                        <td style="border:1px solid #ddd; padding:8px;">
+                            ${image ? `<img src="${image}" width="80" />` : ""}
+                        </td>
+                        <td style="border:1px solid #ddd; padding:8px;">
+                            ${product.title}
+                        </td>
+                        <td style="border:1px solid #ddd; padding:8px; text-align:center;">
+                            ${qty}
+                        </td>
+                        <td style="border:1px solid #ddd; padding:8px; text-align:center;">
+                            RS.${price * qty}
+                        </td>
+                    </tr>
+                `;
+            }
+            return "";
         })
         .join("");
 
@@ -190,16 +242,18 @@ async function sendOrderEmail(user, cartItems, totalAmount) {
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
-        }
+        },
+        tls: { rejectUnauthorized: false } 
     });
 
     await transporter.sendMail({
         from: `"Your Store" <${process.env.EMAIL_USER}>`,
-        to: user.email, 
+        to: user.email,
         subject: "Order Confirmation",
         html
     });
 }
+
 
 
 async function getAllOrdersService(page, limit, search) {
