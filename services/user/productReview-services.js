@@ -71,7 +71,13 @@ async function getAllReviews() {
     });
 }
 
+async function deleteReviewById(reviewId) {
+    const deletedReview = await ProductReviews.findByIdAndDelete(reviewId);
+    return deletedReview;
+}
+
 module.exports = {
     addReview,
-    getAllReviews
+    getAllReviews,
+    deleteReviewById
 };

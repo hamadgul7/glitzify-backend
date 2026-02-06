@@ -43,7 +43,34 @@ async function getAllReviews(req, res) {
     }
 }
 
+async function deleteReview(req, res) {
+    try {
+        const reviewId = req.params.reviewId;
+
+        const deletedReview = await reviewService.deleteReviewById(reviewId);
+
+        if (!deletedReview) {
+            return res.status(404).json({
+                success: false,
+                message: "Review not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Review deleted successfully"
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete review"
+        });
+    }
+}
+
 module.exports = {
     addReviewController,
-    getAllReviews
+    getAllReviews,
+    deleteReview
 };
