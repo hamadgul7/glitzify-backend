@@ -26,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/admin', productRoutes);
 app.use('/admin', orderRoutes);
 app.use('/admin', dashboardStatsRoutes);
+app.use('/admin', reviewRoutes);
 
 app.use('/user', productRoutes);
 app.use('/user', userDetailsRoutes);

@@ -55,6 +55,23 @@ async function addReview(reviewData) {
     return review;
 }
 
+async function getAllReviews() {
+    const reviews = await ProductReviews.find()
+        .populate({ path: "productId", select: "title" })
+        .exec();
+
+    return reviews.map(function(review) {
+        return {
+            _id: review._id,
+            customerName: review.customerName,
+            rating: review.rating,
+            comment: review.comment,
+            productTitle: review.productId ? review.productId.title : null
+        };
+    });
+}
+
 module.exports = {
-    addReview
+    addReview,
+    getAllReviews
 };
